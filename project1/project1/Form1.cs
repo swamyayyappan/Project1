@@ -26,14 +26,14 @@ namespace project1
                 txt2.Text = optFile.FileName;
             }
 
-            txt1.Text = Path.GetFileName(optFile.FileName);
+            txt1.Text = Path.GetFileName(txt2.Text);
         }
 
         private void btn2_Click(object sender, EventArgs e)
         {
             if (string.IsNullOrWhiteSpace(txt1.Text) || string.IsNullOrWhiteSpace(txt2.Text))
             {
-                MessageBox.Show("Please select a file before copying.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Please select a file or folder before copying.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
@@ -42,24 +42,17 @@ namespace project1
 
             try
             {
-                // If the source is a directory, copy its contents recursively
                 if (Directory.Exists(sourcePath))
                 {
-                    CopyDirectory(sourcePath, Application.StartupPath);
+                    CopyDirectory(sourcePath, destinationFileName);
+                }
+                else if (File.Exists(sourcePath))
+                {
+                    CopyFile(sourcePath, destinationFileName);
                 }
                 else
                 {
-                    // If the source is a single file, handle it as before
-                    if (File.Exists(destinationFileName))
-                    {
-                        string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(txt1.Text);
-                        string extension = Path.GetExtension(txt1.Text);
-                        string newFileName = $"{fileNameWithoutExtension}_Copy{extension}";
-
-                        destinationFileName = Path.Combine(Application.StartupPath, newFileName);
-                    }
-
-                    File.Copy(sourcePath, destinationFileName, true);
+                    MessageBox.Show("Invalid source path.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
 
                 MessageBox.Show("File(s) copied successfully.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -84,16 +77,7 @@ namespace project1
             {
                 string fileName = Path.GetFileName(file);
                 string destPath = Path.Combine(destDir, fileName);
-
-                int count = 1;
-                while (File.Exists(destPath))
-                {
-                    string newFileName = $"{Path.GetFileNameWithoutExtension(fileName)}_{count}{Path.GetExtension(fileName)}";
-                    destPath = Path.Combine(destDir, newFileName);
-                    count++;
-                }
-
-                File.Copy(file, destPath);
+                CopyFile(file, destPath);
             }
 
             foreach (var subDir in Directory.GetDirectories(sourceDir))
@@ -102,6 +86,18 @@ namespace project1
                 string destSubDir = Path.Combine(destDir, dirName);
                 CopyDirectory(subDir, destSubDir);
             }
+        }
+
+        private void CopyFile(string sourceFile, string destFile)
+        {
+            int count = 1;
+            while (File.Exists(destFile))
+            {
+                string newFileName = $"{Path.GetFileNameWithoutExtension(destFile)}_{count}{Path.GetExtension(destFile)}";
+                destFile = Path.Combine(Path.GetDirectoryName(destFile), newFileName);
+                count++;
+            }
+            File.Copy(sourceFile, destFile);
         }
     }
 }
